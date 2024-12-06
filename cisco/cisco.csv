@@ -1,0 +1,3 @@
+host,username,password,port,identificacao
+10.255.255.1,user,senha,22,ASR1002-1
+10.255.255.2,user,senha,22,ASR1004-2
