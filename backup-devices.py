@@ -11,7 +11,7 @@ import re
 import glob
 
 # Quantidade de backups a serem mantidos
-MAX_BACKUPS = 1
+MAX_BACKUPS = 4
 
 # Definindo o nome fixo do arquivo CSV
 csv_file = "/root/backup/scripts/devices.csv"
@@ -23,6 +23,14 @@ cliente = sys.argv[1].upper()
 if not os.path.isfile(csv_file):
     print(f"Erro: o arquivo {csv_file} não foi encontrado.")
     sys.exit(1)
+
+# Função para verificar se a unidade de redundância está montada
+def check_redundancy_mount():
+    # Verifica se o ponto de montagem '/mnt/backup' está presente na saída do comando 'mount'
+    if not os.path.ismount("/mnt/backup"):
+        logging.error("Erro: A unidade de redundância não está montada em /mnt/backup.")
+        return False
+    return True
 
 # Configuração do log
 log_directory = f"/root/backup/{cliente}/log"  # Diretório de log agora inclui o cliente
@@ -41,9 +49,10 @@ logging.basicConfig(
 # Mapeamento de dispositivos e comandos
 devices_map = {
     'huawei-rt': ('huawei', 'display current-configuration | no-more'),
-    'huawei-olt': ('huawei_smartax', 'display current-configuration | no-more'),  # Adicionando enable() para OLT
+    'huawei-olt': ('huawei_smartax', 'display current-configuration | no-more'),
     'mikrotik': ('mikrotik_routeros', 'export terse'),
     'cisco': ('cisco_ios', 'show running-config'),
+    'datacom': ('cisco_ios', 'show running-config | nomore'),
     'huawei-sw': ('huawei', [
         "screen-length 0 temporary",
         "display current-configuration"
@@ -108,6 +117,9 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
             for cmd in command:
                 logging.info(f"Executando comando: {cmd} no dispositivo: {identificacao}")
                 output = net_connect.send_command(cmd, delay_factor=2)
+        elif vendor == 'datacom':
+            logging.info(f"Executando comando: {command} no dispositivo {identificacao}")
+            output = net_connect.send_command_timing(command)
         else:
             logging.info(f"Executando comando: {command} no dispositivo: {identificacao}")
             output = net_connect.send_command(command, delay_factor=2)
@@ -132,6 +144,11 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
             backup_file.write("\n\n--- End of session log ---\n")
 
         logging.info(f"Backup do dispositivo {identificacao} realizado com sucesso. Arquivo salvo em: {filename}")
+
+        # Verificar se a unidade de redundância está montada antes de copiar o backup
+        if not check_redundancy_mount():
+            logging.error(f"Backup não foi copiado para a unidade de redundância devido ao erro de montagem.")
+            return  # Impede a cópia para a unidade de redundância se não estiver montada
 
         # Copiar o arquivo de backup para a unidade de redundância
         redundancy_backup_dir = f"/mnt/backup/{cliente}/{tipo}/{identificacao}"  # Diretório de redundância inclui o tipo e identificacao
