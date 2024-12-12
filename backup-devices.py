@@ -8,6 +8,10 @@ import os
 import shutil
 from datetime import datetime
 import re
+import glob
+
+# Quantidade de backups a serem mantidos
+MAX_BACKUPS = 1
 
 # Definindo o nome fixo do arquivo CSV
 csv_file = "/root/backup/scripts/devices.csv"
@@ -64,6 +68,8 @@ def process_hosts_from_csv(csv_file):
 
             # Chamada para a função de backup
             backup_device(host, username, password, port, identificacao, tipo, vendor)
+            # Após o backup, chamar a função de retenção
+            retain_backups(cliente, tipo, identificacao)
 
 # Função para realizar o backup de cada dispositivo
 def backup_device(host, username, password, port, identificacao, tipo, vendor):
@@ -114,14 +120,6 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
         backup_dir = f"/root/backup/{cliente}/{tipo}/{identificacao}"  # Diretório de backup inclui o tipo e identificacao
         os.makedirs(backup_dir, exist_ok=True)  # Criar diretório baseado no tipo
 
-        # Salvar o log no arquivo com o nome gerado
-        log_filename = os.path.join(log_directory, f'backup_{tipo}_{vendor}.log')  # Nome do log inclui tipo e vendor
-        os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-        with open(log_filename, 'a') as log_file:
-            log_file.write(f"{current_time} - Backup iniciado para: {identificacao} ({host})\n")
-            log_file.write(output)
-            log_file.write("\n\n--- End of session log ---\n")
-
         # Criar o nome do arquivo de backup
         filename = os.path.join(backup_dir, f"bkp_{identificacao}_{current_time}.txt")
 
@@ -146,6 +144,38 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
 
     except Exception as e:
         logging.error(f"Erro ao conectar com {host}: {e}")
+
+# Função de retenção de backups, mantendo apenas os backups mais recentes
+def retain_backups(cliente, tipo, identificacao, max_backups=MAX_BACKUPS):
+    # Diretório de backup original
+    backup_dir = f"/root/backup/{cliente}/{tipo}/{identificacao}"
+
+    # Diretório de backup na unidade de redundância
+    backup_dir_redundancia = f"/mnt/backup/{cliente}/{tipo}/{identificacao}"
+
+    # Verifica se o diretório de backup original existe
+    if os.path.exists(backup_dir):
+        # Obter todos os arquivos de backup no diretório original
+        backups = sorted(glob.glob(f"{backup_dir}/*.txt"), key=os.path.getmtime, reverse=True)
+
+        # Se houver mais backups do que o permitido, excluir os mais antigos
+        if len(backups) > max_backups:
+            backups_to_delete = backups[max_backups:]  # Pega os backups mais antigos, além dos mais recentes
+            for backup in backups_to_delete:
+                logging.info(f"Excluindo backup antigo no diretório original: {backup}")
+                os.remove(backup)
+
+    # Verifica se o diretório de backup na unidade de redundância existe
+    if os.path.exists(backup_dir_redundancia):
+        # Obter todos os arquivos de backup no diretório de redundância
+        backups_redundancia = sorted(glob.glob(f"{backup_dir_redundancia}/*.txt"), key=os.path.getmtime, reverse=True)
+
+        # Se houver mais backups do que o permitido, excluir os mais antigos
+        if len(backups_redundancia) > max_backups:
+            backups_to_delete_redundancia = backups_redundancia[max_backups:]  # Pega os backups mais antigos, além dos mais recentes
+            for backup in backups_to_delete_redundancia:
+                logging.info(f"Excluindo backup antigo na unidade de redundância: {backup}")
+                os.remove(backup)
 
 # Iniciar o processo de leitura do arquivo CSV
 process_hosts_from_csv(csv_file)
