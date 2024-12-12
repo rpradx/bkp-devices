@@ -13,7 +13,7 @@ import re
 csv_file = "/root/backup/scripts/devices.csv"
 
 # Variável para o nome do cliente
-cliente = sys.argv[1]
+cliente = sys.argv[1].upper()
 
 # Verifique se o arquivo CSV existe
 if not os.path.isfile(csv_file):
