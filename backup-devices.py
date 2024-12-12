@@ -57,7 +57,7 @@ def process_hosts_from_csv(csv_file):
             port = row['port']
             identificacao = row['identificacao']
             tipo = row['tipo'].upper()
-            vendor = row['vendor'].upper()
+            vendor = row['vendor']
 
             # Limpeza da variável de identificação
             identificacao = re.sub(r'[^a-zA-Z0-9_-]', '', identificacao)
