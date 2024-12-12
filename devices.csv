@@ -8,3 +8,7 @@ host,username,password,port,identificacao,tipo,vendor
 10.255.255.4,admin,admin,22,CCR-1036-TESTE,rt-mikrotik,mikrotik
 
 10.255.255.5,admin,admin,22,ASR-1002-TESTE,rt-cisco,cisco
+
+10.255.255.6,admin,admin,22,OLT-TESTE,OLT-DATACOM,datacom
+
+10.255.255.7,admin,admin,22,SW-TESTE,SW-DATACOM,datacom
