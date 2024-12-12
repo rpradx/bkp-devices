@@ -22,6 +22,10 @@ Você pode instalar o Netmiko usando o seguinte comando:
 
 ```bash
 pip install netmiko
+
+apt install cifs-utils
+
+apt install util-linux
 ```
 
 ## Como Executar
