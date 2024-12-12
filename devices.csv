@@ -1,0 +1,10 @@
+host,username,password,port,identificacao,tipo,vendor
+10.255.255.1,admin,admin,22,OLT-TESTE,OLT-HUAWEI,huawei-olt
+
+10.255.255.2,admin,admin,22,SW-TESTE,SW-HUAWEI,huawei-sw
+
+10.255.255.3,admin,admin,22,SW-TESTE,SW-HUAWEI,huawei-rt
+
+10.255.255.4,admin,admin,22,CCR-1036-TESTE,rt-mikrotik,mikrotik
+
+10.255.255.5,admin,admin,22,ASR-1002-TESTE,rt-cisco,cisco

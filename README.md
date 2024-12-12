@@ -1,7 +1,7 @@
 
-# Script para Backup de Switches e Roteadores e OLTs
+# Script para Backup de Switches, Roteadores e OLTs
 
-Este script realiza o backup das configurações de equipamentos, tanto de Switches quanto de Roteadores e OLTs, gerando arquivos `.txt` com as configurações coletadas através dos comandos `"display current" | "show run"`.
+Este script realiza o backup das configurações de equipamentos, tanto de Switches quanto de Roteadores e OLTs, gerando arquivos `.txt` com as configurações.
 
 ## Tabela de Conteúdos
 
@@ -37,17 +37,8 @@ pip install netmiko
 2. **Mover os arquivos de script e configuração** para o diretório adequado:
 
    ```bash
-   ## CISCO ##
-   mv backup-rt-cisco.py /root/backup/scripts
-   mv cisco.csv /root/backup/scripts
-   
-   ## HUAWEI ##
-   mv backup-sw-huawei.py /root/backup/scripts
-   mv backup-router-huawei.py /root/backup/scripts
-   mv backup-olt-huawei.py /root/backup/scripts
-   mv switchs.csv /root/backup/scripts
-   mv routers.csv /root/backup/scripts
-   mv olts.csv /root/backup/scripts
+   mv backup-devices.py /root/backup/scripts
+   mv devices.csv /root/backup/scripts
    ```
 
 ### Configuração de Permissões
@@ -71,33 +62,10 @@ pip install netmiko
 Para automatizar o processo de backup e montagem, adicione as seguintes entradas ao seu `crontab`.
 
 ```bash
-####################################################
-#                       HUAWEI                     #
-####################################################
-
 ##################
-# BACKUP SWITCHS #
+# BACKUP DEVICES #
 ##################
-10 23 * * 3,6 /usr/bin/python3 /root/backup/scripts/backup_sw_huawei.py CLIENTE
-
-##################
-# BACKUP ROUTERS #
-##################
-20 23 * * 3,6 /usr/bin/python3 /root/backup/scripts/backup_router_huawei.py CLIENTE
-
-##################
-# BACKUP OLTs    #
-##################
-30 23 * * 1,3,6 /usr/bin/python3 /root/backup/scripts/backup_olt_huawei.py CLIENTE
-
-###################################################
-#                       CISCO                     #
-###################################################
-
-##################
-# BACKUP ROUTERS #
-##################
-20 23 * * 3,6 /usr/bin/python3 /root/backup/scripts/backup_rt_cisco.py CLIENTE
+0 23 */2 * * /usr/bin/python3 /root/backup/scripts/backup-devices.py "CLIENTE"
 
 ##########################
 # MOUNT COMPARTILHAMENTO #
