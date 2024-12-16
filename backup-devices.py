@@ -101,8 +101,8 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
         'port': port,
         'secret': password,
         'verbose': True,
-        'timeout': 120,
-        'banner_timeout': 120,
+        'timeout': 300,
+        'banner_timeout': 300,
     }
 
     # Estabelecer a conexão SSH
@@ -110,19 +110,41 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
         net_connect = ConnectHandler(**device)
 
         # Lógica de execução dos comandos
+        output = ""
         if vendor == 'huawei-olt':
             net_connect.enable()
-            output = net_connect.send_command_timing(command)
+            output += net_connect.send_command_timing(
+                command,
+                delay_factor=3,  # Aumentar delay_factor
+                max_loops=1000  # Aumentar max_loops para permitir mais tentativas
+            )
         elif vendor == 'huawei-sw':
             for cmd in command:
                 logging.info(f"Executando comando: {cmd} no dispositivo: {identificacao}")
-                output = net_connect.send_command(cmd, delay_factor=2)
+                cmd_output = net_connect.send_command(
+                    cmd,
+                    delay_factor=3,  # Aumentar delay_factor
+                    read_timeout=300,  # Aumentar read_timeout
+                    max_loops=1000  # Aumentar max_loops
+                )
+                output += cmd_output + "\n"
         elif vendor == 'datacom':
+            # Alteração Principal: Usar send_command em vez de send_command_timing
             logging.info(f"Executando comando: {command} no dispositivo {identificacao}")
-            output = net_connect.send_command_timing(command)
+            output += net_connect.send_command(
+                command,
+                delay_factor=3,  # Aumentar delay_factor
+                read_timeout=300,  # Aumentar read_timeout
+                max_loops=1000  # Aumentar max_loops
+            )
         else:
             logging.info(f"Executando comando: {command} no dispositivo: {identificacao}")
-            output = net_connect.send_command(command, delay_factor=2)
+            output += net_connect.send_command(
+                command,
+                delay_factor=3,  # Aumentar delay_factor
+                read_timeout=300,  # Aumentar read_timeout
+                max_loops=1000  # Aumentar max_loops
+            )
 
         # Fechar a conexão
         net_connect.disconnect()
@@ -184,7 +206,7 @@ def retain_backups(cliente, tipo, identificacao, max_backups=MAX_BACKUPS):
 
     # Verifica se o diretório de backup na unidade de redundância existe
     if os.path.exists(backup_dir_redundancia):
-        # Obter todos os arquivos de backup no diretório de redundância
+        # Obter todos os arquivos de backup na unidade de redundância
         backups_redundancia = sorted(glob.glob(f"{backup_dir_redundancia}/*.txt"), key=os.path.getmtime, reverse=True)
 
         # Se houver mais backups do que o permitido, excluir os mais antigos
