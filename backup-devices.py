@@ -101,49 +101,54 @@ def backup_device(host, username, password, port, identificacao, tipo, vendor):
         'port': port,
         'secret': password,
         'verbose': True,
-        'timeout': 300,
-        'banner_timeout': 300,
+        'timeout': 600,  # Aumentar o timeout geral para 600 segundos
+        'banner_timeout': 600,  # Aumentar o banner timeout para 600 segundos
+        # 'session_log': f"/root/backup/{cliente}/log/{identificacao}_session.log",  # Opcional: Ativar log de sessão
     }
 
     # Estabelecer a conexão SSH
     try:
         net_connect = ConnectHandler(**device)
 
+        # Opcional: Ativar log de sessão
+        # net_connect.session_log = f"/root/backup/{cliente}/log/{identificacao}_session.log"
+
         # Lógica de execução dos comandos
         output = ""
         if vendor == 'huawei-olt':
             net_connect.enable()
-            output += net_connect.send_command_timing(
+            logging.info(f"Executando comando: {command} no dispositivo: {identificacao}")
+            output += net_connect.send_command(
                 command,
-                delay_factor=3,  # Aumentar delay_factor
-                max_loops=1000  # Aumentar max_loops para permitir mais tentativas
+                delay_factor=3,       # Aumentar delay_factor
+                read_timeout=600,     # Aumentar read_timeout para 600 segundos
+                max_loops=1000        # Aumentar max_loops para permitir mais tentativas
             )
         elif vendor == 'huawei-sw':
             for cmd in command:
                 logging.info(f"Executando comando: {cmd} no dispositivo: {identificacao}")
                 cmd_output = net_connect.send_command(
                     cmd,
-                    delay_factor=3,  # Aumentar delay_factor
-                    read_timeout=300,  # Aumentar read_timeout
-                    max_loops=1000  # Aumentar max_loops
+                    delay_factor=3,       # Aumentar delay_factor
+                    read_timeout=600,     # Aumentar read_timeout para 600 segundos
+                    max_loops=1000        # Aumentar max_loops
                 )
                 output += cmd_output + "\n"
         elif vendor == 'datacom':
-            # Alteração Principal: Usar send_command em vez de send_command_timing
             logging.info(f"Executando comando: {command} no dispositivo {identificacao}")
             output += net_connect.send_command(
                 command,
-                delay_factor=3,  # Aumentar delay_factor
-                read_timeout=300,  # Aumentar read_timeout
-                max_loops=1000  # Aumentar max_loops
+                delay_factor=3,       # Aumentar delay_factor
+                read_timeout=600,     # Aumentar read_timeout para 600 segundos
+                max_loops=1000        # Aumentar max_loops
             )
         else:
             logging.info(f"Executando comando: {command} no dispositivo: {identificacao}")
             output += net_connect.send_command(
                 command,
-                delay_factor=3,  # Aumentar delay_factor
-                read_timeout=300,  # Aumentar read_timeout
-                max_loops=1000  # Aumentar max_loops
+                delay_factor=3,       # Aumentar delay_factor
+                read_timeout=600,     # Aumentar read_timeout para 600 segundos
+                max_loops=1000        # Aumentar max_loops
             )
 
         # Fechar a conexão
